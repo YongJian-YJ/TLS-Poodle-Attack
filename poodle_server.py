@@ -99,5 +99,4 @@ if __name__ == '__main__':
     server.logger.disabled = True
     log = logging.getLogger('werkzeug')
     log.disabled = True
-    # Server running on port 3000
-    server.run(port=3000)
+    server.run(port=8000)

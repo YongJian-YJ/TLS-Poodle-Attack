@@ -31,8 +31,8 @@ KEY = None
 IV = None
 MSG = None
 # PORTS and URLS where the attacker and server resides
-SERVER_PORT = 3000
-ATTACKER_PORT = 3002
+SERVER_PORT = 8000
+ATTACKER_PORT = 8002
 
 SERVER_URL = f'http://127.0.0.1:{SERVER_PORT}/'
 ATTACKER_URL = f"http://127.0.0.1:{ATTACKER_PORT}/"
@@ -221,4 +221,4 @@ if __name__ == '__main__':
     client.logger.disabled = True
     log = logging.getLogger('werkzeug')
     log.disabled = True
-    client.run(port=3001)
+    client.run(port=8001)

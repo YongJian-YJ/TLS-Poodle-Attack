@@ -14,8 +14,8 @@ import re
 attacker = Flask(__name__)
 
 # Initialization of the client and the server
-CLIENT_PORT = 3001
-SERVER_PORT = 3000
+CLIENT_PORT = 8001
+SERVER_PORT = 8000
 
 BASE_URL = f'http://127.0.0.1:{CLIENT_PORT}/'
 SERVER_URL = f'http://127.0.0.1:{SERVER_PORT}/'
@@ -168,4 +168,4 @@ if __name__ == '__main__':
     attacker.logger.disabled = True
     log = logging.getLogger('werkzeug')
     log.disabled = True
-    attacker.run(port=3002)
+    attacker.run(port=8002)
