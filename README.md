@@ -1,3 +1,3 @@
-# SC4010-Applied-Cryptography-Project
+# SC4010 TLS Man-in-the-Middle Attack
 
 <p>U/C</p>
