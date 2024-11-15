@@ -132,19 +132,19 @@ if "intercepted_message" in st.session_state:
         st.error(f"Error in decryption: {e}")
 
 
-# Optional: Eve can modify the intercepted message before sending it forward
-if "intercepted_message" in st.session_state:
-    modified_message = st.text_input(
-        "Modify the message before sending:", plaintext.decode()
-    )
-    modified_message_to_send = b""
-    modified_message_to_send += modified_message_to_send
+# # Optional: Eve can modify the intercepted message before sending it forward
+# if "intercepted_message" in st.session_state:
+#     modified_message = st.text_input(
+#         "Modify the message before sending:", plaintext.decode()
+#     )
+#     modified_message_to_send = b""
+#     modified_message_to_send += modified_message_to_send
 
-    if st.button("Send Modified Message"):
-        # Base64 encode the modified message
-        key = os.urandom(block_size)
-        encrypted_message = cbc_encrypt(modified_message_to_send, key, iv)
-        st.session_state["ciphertext"] = base64.b64encode(encrypted_message).decode(
-            "utf-8"
-        )
-        st.success("Modified message sent to Server.")
+#     if st.button("Send Modified Message"):
+#         # Base64 encode the modified message
+#         key = os.urandom(block_size)
+#         encrypted_message = cbc_encrypt(modified_message_to_send, key, iv)
+#         st.session_state["ciphertext"] = base64.b64encode(encrypted_message).decode(
+#             "utf-8"
+#         )
+#         st.success("Modified message sent to Server.")

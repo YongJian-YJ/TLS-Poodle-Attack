@@ -57,6 +57,7 @@ if st.button("Send Message"):
 
     # Encode the IV in base64 before storing it
     st.session_state["iv"] = base64.b64encode(iv).decode("utf-8")
+    st.session_state["key"] = base64.b64encode(key).decode("utf-8")
 
     # Perform CBC encryption
     ciphertext = cbc_encrypt(secret_message, key, iv)
