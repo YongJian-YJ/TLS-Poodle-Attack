@@ -1,4 +1,6 @@
 # conda activate chat-with-website
+# streamlit run page_controller.py
+
 import streamlit as st
 
 Server = st.Page(
