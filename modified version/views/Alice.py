@@ -1,6 +1,5 @@
 import streamlit as st
 import os
-from itertools import cycle
 import base64
 
 block_size = 8
@@ -45,6 +44,9 @@ def cbc_encrypt(plaintext, key, iv, block_size=8):
 
 # Create a textbox for Alice to type the message
 message_input = st.text_input("Enter your message:", value=st.session_state["message"])
+secret_message = b""
+secret_message += message_input.encode("utf-8")
+print("message_input:", secret_message)
 
 # Create a button to send the message
 if st.button("Send Message"):
@@ -52,15 +54,19 @@ if st.button("Send Message"):
     key = os.urandom(block_size)
     iv = os.urandom(block_size)
     st.write(f"IV: {iv}")
+
+    # Encode the IV in base64 before storing it
     st.session_state["iv"] = base64.b64encode(iv).decode("utf-8")
 
     # Perform CBC encryption
-    ciphertext = cbc_encrypt(st.session_state["message"].encode(), key, iv)
+    ciphertext = cbc_encrypt(secret_message, key, iv)
 
+    # Display the original message and ciphertext (both in hex and raw)
     st.write(f"Original Message: {message_input}")
     st.write(f"Ciphertext (hex): {ciphertext.hex()}")
     st.write(f"Ciphertext (raw): {ciphertext}")
 
-    # Save the message to the session state when the button is pressed
+    # Encode the ciphertext in base64 before storing it
     st.session_state["ciphertext"] = base64.b64encode(ciphertext).decode("utf-8")
+
     st.success("Ciphertext sent!")

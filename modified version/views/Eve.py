@@ -1,5 +1,6 @@
 import streamlit as st
 import base64
+import os
 
 block_size = 8
 
@@ -28,6 +29,29 @@ def unpad(padded_text):
         raise ValueError("Invalid padding")
 
 
+# CBC encryption function
+def cbc_encrypt(plaintext, key, iv, block_size=8):
+    """Encrypt using CBC mode."""
+    plaintext = pad(plaintext, block_size)
+    blocks = [iv]  # initialize the list blocks with the iv inside
+    ciphertext = b""
+
+    # Iterate over the plaintext in blocks of size `block_size`
+    for i in range(0, len(plaintext), block_size):
+        block = plaintext[i : i + block_size]
+        cipher_block = xor_bytes(blocks[-1], block)  # Simulated "encryption" using XOR
+        blocks.append(cipher_block)  # Append the cipher block to blocks
+        ciphertext += cipher_block
+
+    return ciphertext
+
+
+def pad(plaintext, block_size=8):
+    """Apply PKCS#7 padding."""
+    padding_len = block_size - (len(plaintext) % block_size)
+    return plaintext + bytes([padding_len] * padding_len)
+
+
 def xor_bytes(a, b):
     """XOR two byte strings."""
     return bytes(x ^ y for x, y in zip(a, b))
@@ -35,8 +59,6 @@ def xor_bytes(a, b):
 
 # Simulate POODLE Attack: Byte-by-byte decryption
 def poodle_attack(ciphertext, iv, block_size=8):
-    print("ciphertext:", ciphertext)
-    print("iv", iv)
     """Perform a POODLE-like attack by decrypting the last byte of each block."""
     decrypted_message = b""
     blocks = [iv] + [
@@ -82,7 +104,6 @@ def poodle_attack(ciphertext, iv, block_size=8):
                             guess ^ padding_value ^ previous_block[byte_index]
                         )
                         found = True  # if true, break the guess loop and go to another byte_index
-                        print("found is true")
                         break  # Exit after finding correct padding
                 except ValueError:
                     continue  # Skip invalid padding
@@ -91,24 +112,39 @@ def poodle_attack(ciphertext, iv, block_size=8):
                 raise ValueError("Unable to determine padding")
 
         decrypted_message += bytes(decrypted_block)
-
     return unpad(decrypted_message)
 
 
 # Display a log of intercepted messages (if relevant)
 if "intercepted_message" in st.session_state:
     intercepted_message = base64.b64decode(st.session_state["ciphertext"])
-    iv = base64.b64decode(st.session_state["iv"])
-    st.write(f"IV: {iv}")
-    st.subheader("Poodle Attack")
-    plaintext = poodle_attack(intercepted_message, iv, 8)
+    print("cyphertext: ", intercepted_message)
+    iv = base64.b64decode(st.session_state["iv"])  # Decode IV from base64
+    print("iv: ", iv)
 
-    st.write("Decrypted Message: ", plaintext)
+    st.subheader("Poodle Attack")
+
+    try:
+        # Attempt to decrypt using POODLE attack
+        plaintext = poodle_attack(intercepted_message, iv, 8)
+        st.write("Decrypted Message: ", plaintext.decode())
+    except Exception as e:
+        st.error(f"Error in decryption: {e}")
 
 
 # Optional: Eve can modify the intercepted message before sending it forward
 if "intercepted_message" in st.session_state:
-    modified_message = st.text_input("Modify the message before sending:", plaintext)
+    modified_message = st.text_input(
+        "Modify the message before sending:", plaintext.decode()
+    )
+    modified_message_to_send = b""
+    modified_message_to_send += modified_message_to_send
+
     if st.button("Send Modified Message"):
-        st.session_state["ciphertext"] = modified_message
+        # Base64 encode the modified message
+        key = os.urandom(block_size)
+        encrypted_message = cbc_encrypt(modified_message_to_send, key, iv)
+        st.session_state["ciphertext"] = base64.b64encode(encrypted_message).decode(
+            "utf-8"
+        )
         st.success("Modified message sent to Server.")
