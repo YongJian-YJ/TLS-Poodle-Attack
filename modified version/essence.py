@@ -75,10 +75,9 @@ ciphertext = cbc_encrypt(secret_message, key, iv, block_size)
 print("Ciphertext:", ciphertext.hex())
 
 
-def server_check_padding(modified_block, target_block, block_size):
+def server_check_padding(modified_block, target_block, block_size, padding_value):
     """Simulate server-side padding check."""
     decrypted_byte = xor_bytes(modified_block, target_block)
-    padding_value = decrypted_byte[-1]
 
     # Validate padding
     if padding_value == 0 or padding_value > block_size:
@@ -125,13 +124,13 @@ def poodle_attack(ciphertext, iv, block_size=8):
                     # Modified block is the previous block, attacker manipulate this using trial and error
                     # Target block is the current ciphertext block that the attacker is trying to decrypt
                     # Padding validation processes depend on the entire P, not just one byte.
-                    decrypted_byte = xor_bytes(modified_block, target_block)
+                    server_check = server_check_padding(
+                        modified_block, target_block, block_size, padding_value
+                    )
 
                     # if padding value = 3 and the [padding value] = [3], so the product become [3, 3, 3] and byte(xx) become b'\x03\x03\x03'
                     # Vulnerability: Attacker know that the padding will be the same value for each padding byte and will be equal to the number of padding bytes.
-                    if decrypted_byte[-padding_value:] == bytes(
-                        [padding_value] * padding_value
-                    ):
+                    if server_check == True:
                         # Calculate the original byte value in the plaintext
                         decrypted_block[byte_index] = (
                             guess ^ padding_value ^ previous_block[byte_index]
