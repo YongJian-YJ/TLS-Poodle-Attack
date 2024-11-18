@@ -4,70 +4,64 @@ import base64
 
 block_size = 8
 
-# Header for Alice's control page
 st.header("Alice's Control Page")
 
-# Initialize the session state variable for the message if it doesn't exist
+# Initialize session state variables
 if "message" not in st.session_state:
     st.session_state["message"] = ""
+if "key" not in st.session_state:
+    st.session_state["key"] = os.urandom(block_size)
 
 
-# Function to simulate XOR operation between two byte-like objects
 def xor_bytes(a, b):
     """XOR two byte strings."""
     return bytes(x ^ y for x, y in zip(a, b))
 
 
-# Function to pad the plaintext to the desired block size (8 bytes)
 def pad(plaintext, block_size=8):
     """Apply PKCS#7 padding."""
     padding_len = block_size - (len(plaintext) % block_size)
     return plaintext + bytes([padding_len] * padding_len)
 
 
-# CBC encryption function
 def cbc_encrypt(plaintext, key, iv, block_size=8):
     """Encrypt using CBC mode."""
     plaintext = pad(plaintext, block_size)
-    blocks = [iv]  # initialize the list blocks with the iv inside
+    previous = iv
     ciphertext = b""
 
-    # Iterate over the plaintext in blocks of size `block_size`
     for i in range(0, len(plaintext), block_size):
         block = plaintext[i : i + block_size]
-        cipher_block = xor_bytes(blocks[-1], block)  # Simulated "encryption" using XOR
-        blocks.append(cipher_block)  # Append the cipher block to blocks
+        cipher_block = xor_bytes(previous, block)  # Simulated encryption using XOR
         ciphertext += cipher_block
+        previous = cipher_block
 
     return ciphertext
 
 
 # Create a textbox for Alice to type the message
 message_input = st.text_input("Enter your message:", value=st.session_state["message"])
-secret_message = b""
-secret_message += message_input.encode("utf-8")
-print("message_input:", secret_message)
 
 # Create a button to send the message
 if st.button("Send Message"):
-    # Example key and IV for encryption (for simplicity, use fixed values)
-    key = os.urandom(block_size)
-    iv = os.urandom(block_size)
-    st.write(f"IV: {iv}")
+    secret_message = message_input.encode("utf-8")
 
-    # Encode the IV in base64 before storing it
-    st.session_state["iv"] = base64.b64encode(iv).decode("utf-8")
-    st.session_state["key"] = base64.b64encode(key).decode("utf-8")
+    # Generate IV for this message
+    iv = os.urandom(block_size)
+    key = st.session_state["key"]  # Use consistent key from session state
+
+    # Store IV and key in session state
+    st.session_state["iv"] = iv
 
     # Perform CBC encryption
     ciphertext = cbc_encrypt(secret_message, key, iv)
 
-    # Display the original message and ciphertext (both in hex and raw)
+    # Store ciphertext in session state
+    st.session_state["ciphertext"] = ciphertext
+
+    # Display information
     st.write(f"Original Message: {message_input}")
+    st.write(f"IV (hex): {iv.hex()}")
     st.write(f"Ciphertext (hex): {ciphertext.hex()}")
-    st.write(f"Ciphertext (raw): {ciphertext}")
 
-    # Encode the ciphertext in base64 before storing it
-    st.session_state["ciphertext"] = base64.b64encode(ciphertext).decode("utf-8")
-
-    st.success("Ciphertext sent!")
+    st.success("Message encrypted and sent!")

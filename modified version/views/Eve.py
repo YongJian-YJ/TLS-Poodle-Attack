@@ -1,38 +1,8 @@
 import streamlit as st
-import base64
 import os
 
-# latest
-
-# Set the title for Eve's control page
 st.title("Eve's Control Page")
-
-# Create a section to display the message from Alice
-st.subheader("Message from Alice:")
-
-# Option to simulate interception (could alter or log message)
-if st.button("Intercept Message"):
-    # Simulate intercepting the message, for example by logging or modifying it
-    intercepted_message = base64.b64decode(st.session_state["ciphertext"])
-    st.session_state["intercepted_message"] = intercepted_message
-    st.success(f"Intercepted Message: {intercepted_message}")
-
-
-def unpad(padded_text):
-    """Remove PKCS#7 padding."""
-    padding_len = padded_text[-1]
-    if padding_len == 0 or padding_len > len(padded_text):
-        raise ValueError("Invalid padding")
-    if all(p == padding_len for p in padded_text[-padding_len:]):
-        return padded_text[:-padding_len]
-    else:
-        raise ValueError("Invalid padding")
-
-
-def pad(plaintext, block_size=8):
-    """Apply PKCS#7 padding."""
-    padding_len = block_size - (len(plaintext) % block_size)
-    return plaintext + bytes([padding_len] * padding_len)
+block_size = 8
 
 
 def xor_bytes(a, b):
@@ -40,107 +10,119 @@ def xor_bytes(a, b):
     return bytes(x ^ y for x, y in zip(a, b))
 
 
-# Separated server-side padding validation
+def unpad(padded_text):
+    """Remove PKCS#7 padding."""
+    padding_len = padded_text[-1]
+    if padding_len == 0 or padding_len > len(padded_text):
+        raise ValueError("Invalid padding")
+    if padded_text[-padding_len:] != bytes([padding_len] * padding_len):
+        raise ValueError("Invalid padding")
+    return padded_text[:-padding_len]
+
+
 class PaddingOracle:
     def __init__(self, key, iv, block_size=8):
         self.key = key
         self.iv = iv
         self.block_size = block_size
 
+    def decrypt_block(self, prev_block, curr_block):
+        """Decrypt a single block."""
+        return xor_bytes(prev_block, curr_block)
+
     def check_padding(self, ciphertext):
-        """
-        Server-side padding validation.
-        Returns True if padding is valid, False if invalid.
-        This simulates what a real server would do when receiving encrypted data.
-        """
+        """Check if the padding is valid for the given ciphertext."""
         try:
-            # Attempt to decrypt and validate padding
-            blocks = [self.iv] + [
+            blocks = [
                 ciphertext[i : i + self.block_size]
                 for i in range(0, len(ciphertext), self.block_size)
             ]
-            plaintext = b""
-            for i in range(1, len(blocks)):
-                decrypted_block = xor_bytes(blocks[i], blocks[i - 1])
-                plaintext += decrypted_block
 
-            # Check padding validity
+            # Use the stored IV as the first block
+            prev_block = self.iv
+            plaintext = b""
+
+            # Decrypt each block
+            for curr_block in blocks:
+                decrypted = self.decrypt_block(prev_block, curr_block)
+                plaintext += decrypted
+                prev_block = curr_block
+
+            # Validate padding
             padding_len = plaintext[-1]
             if padding_len == 0 or padding_len > self.block_size:
                 return False
-            if not all(p == padding_len for p in plaintext[-padding_len:]):
-                return False
-            return True
+            return plaintext[-padding_len:] == bytes([padding_len] * padding_len)
 
         except Exception:
             return False
 
 
 def poodle_attack(ciphertext, iv, oracle, block_size=8):
-    """
-    Perform POODLE attack using a padding oracle.
-    Now uses an external oracle to check padding validity instead of doing it internally.
-    """
-    decrypted_message = b""
-    blocks = [iv] + [
+    """Perform POODLE attack to decrypt the message."""
+    decrypted = b""
+    blocks = [
         ciphertext[i : i + block_size] for i in range(0, len(ciphertext), block_size)
     ]
 
-    for block_index in range(1, len(blocks)):
-        decrypted_block = bytearray(block_size)
-        target_block = blocks[block_index]
-        previous_block = bytearray(blocks[block_index - 1])
+    for block_idx in range(len(blocks)):
+        current_block = bytearray(blocks[block_idx])
+        if block_idx == 0:
+            prev_block = bytearray(iv)
+        else:
+            prev_block = bytearray(blocks[block_idx - 1])
 
-        for byte_index in range(block_size - 1, -1, -1):
-            padding_value = block_size - byte_index
-            found = False
+        decrypted_block = bytearray(block_size)
+
+        # Try to decrypt each byte
+        for byte_idx in range(block_size - 1, -1, -1):
+            padding_value = block_size - byte_idx
 
             for guess in range(256):
-                modified_block = previous_block[:]
-                modified_block[byte_index] = guess
+                # Modify the previous block
+                test_prev = prev_block[:]
+                test_prev[byte_idx] = guess
 
-                # Apply padding values to other bytes
-                for i in range(byte_index + 1, block_size):
-                    modified_block[i] = (
-                        previous_block[i] ^ padding_value ^ decrypted_block[i]
+                # Set proper padding for known bytes
+                for i in range(byte_idx + 1, block_size):
+                    test_prev[i] ^= padding_value ^ decrypted_block[i]
+
+                # Test if padding is valid
+                test_cipher = bytes(test_prev) + bytes(current_block)
+                if oracle.check_padding(test_cipher):
+                    decrypted_block[byte_idx] = (
+                        guess ^ padding_value ^ prev_block[byte_idx]
                     )
-
-                # Create test ciphertext with modified block
-                test_ciphertext = bytes(modified_block) + target_block
-
-                # Check padding with the oracle
-                if oracle.check_padding(test_ciphertext):
-                    decrypted_block[byte_index] = (
-                        guess ^ padding_value ^ previous_block[byte_index]
-                    )
-                    found = True
                     break
+            else:
+                raise ValueError(f"Could not find valid padding for byte {byte_idx}")
 
-            if not found:
-                raise ValueError(f"Unable to determine padding for byte {byte_index}")
+        decrypted += bytes(decrypted_block)
 
-        decrypted_message += bytes(decrypted_block)
-
-    return unpad(decrypted_message)
+    return unpad(decrypted)
 
 
-# Display a log of intercepted messages (if relevant)
-if "intercepted_message" in st.session_state:
-    intercepted_message = base64.b64decode(st.session_state["ciphertext"])
+# Create interface for attack
+st.subheader("Intercepted Message")
 
-    # define parameter
-    iv = base64.b64decode(st.session_state["iv"])
-    block_size = 8
-    key = os.urandom(block_size)
+if st.button("Intercept Message"):
+    if "ciphertext" in st.session_state and "iv" in st.session_state:
+        intercepted_ciphertext = st.session_state["ciphertext"]
+        iv = st.session_state["iv"]
+        key = st.session_state["key"]
 
-    st.subheader("Poodle Attack")
+        st.write("Intercepted ciphertext (hex):", intercepted_ciphertext.hex())
+        st.write("IV (hex):", iv.hex())
 
-    try:
-        # Create PaddingOracle instance
-        oracle = PaddingOracle(key, iv, block_size)
+        try:
+            # Create oracle with the same key and IV
+            oracle = PaddingOracle(key, iv)
 
-        # Attempt to decrypt using POODLE attack with the oracle
-        plaintext = poodle_attack(intercepted_message, iv, oracle, block_size)
-        st.write("Decrypted Message: ", plaintext.decode())
-    except Exception as e:
-        st.error(f"Error in decryption: {e}")
+            # Perform POODLE attack
+            decrypted = poodle_attack(intercepted_ciphertext, iv, oracle)
+
+            st.success(f"Decrypted message: {decrypted.decode('utf-8')}")
+        except Exception as e:
+            st.error(f"Attack failed: {str(e)}")
+    else:
+        st.error("No message has been intercepted yet!")
