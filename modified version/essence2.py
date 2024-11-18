@@ -1,19 +1,16 @@
-import streamlit as st
-import base64
 import os
+import random
 
-# Set the title for Eve's control page
-st.title("Eve's Control Page")
 
-# Create a section to display the message from Alice
-st.subheader("Message from Alice:")
+def xor_bytes(a, b):
+    """XOR two byte strings."""
+    return bytes(x ^ y for x, y in zip(a, b))
 
-# Option to simulate interception (could alter or log message)
-if st.button("Intercept Message"):
-    # Simulate intercepting the message, for example by logging or modifying it
-    intercepted_message = base64.b64decode(st.session_state["ciphertext"])
-    st.session_state["intercepted_message"] = intercepted_message
-    st.success(f"Intercepted Message: {intercepted_message}")
+
+def pad(plaintext, block_size=8):
+    """Apply PKCS#7 padding."""
+    padding_len = block_size - (len(plaintext) % block_size)
+    return plaintext + bytes([padding_len] * padding_len)
 
 
 def unpad(padded_text):
@@ -27,15 +24,29 @@ def unpad(padded_text):
         raise ValueError("Invalid padding")
 
 
-def pad(plaintext, block_size=8):
-    """Apply PKCS#7 padding."""
-    padding_len = block_size - (len(plaintext) % block_size)
-    return plaintext + bytes([padding_len] * padding_len)
+def cbc_encrypt(plaintext, key, iv, block_size=8):
+    """Encrypt using CBC mode."""
+    plaintext = pad(plaintext, block_size)
+    blocks = [iv]
+    ciphertext = b""
+    for i in range(0, len(plaintext), block_size):
+        block = plaintext[i : i + block_size]
+        cipher_block = xor_bytes(blocks[-1], block)
+        blocks.append(cipher_block)
+        ciphertext += cipher_block
+    return ciphertext
 
 
-def xor_bytes(a, b):
-    """XOR two byte strings."""
-    return bytes(x ^ y for x, y in zip(a, b))
+def cbc_decrypt(ciphertext, key, iv, block_size=8):
+    """Decrypt using CBC mode."""
+    blocks = [iv] + [
+        ciphertext[i : i + block_size] for i in range(0, len(ciphertext), block_size)
+    ]
+    plaintext = b""
+    for i in range(1, len(blocks)):
+        decrypted_block = xor_bytes(blocks[i], blocks[i - 1])
+        plaintext += decrypted_block
+    return unpad(plaintext)
 
 
 # Separated server-side padding validation
@@ -122,23 +133,22 @@ def poodle_attack(ciphertext, iv, oracle, block_size=8):
     return unpad(decrypted_message)
 
 
-# Display a log of intercepted messages (if relevant)
-if "intercepted_message" in st.session_state:
-    intercepted_message = base64.b64decode(st.session_state["ciphertext"])
-
-    # define parameter
-    iv = base64.b64decode(st.session_state["iv"])
+# Example usage
+if __name__ == "__main__":
+    # Initialize parameters
     block_size = 8
     key = os.urandom(block_size)
+    iv = os.urandom(block_size)
+    secret_message = b"ATTACKATDAWN"
 
-    st.subheader("Poodle Attack")
+    # Create oracle and encrypt message
+    oracle = PaddingOracle(key, iv, block_size)
+    ciphertext = cbc_encrypt(secret_message, key, iv, block_size)
+    print("Ciphertext:", ciphertext.hex())
 
+    # Run the attack
     try:
-        # Create PaddingOracle instance
-        oracle = PaddingOracle(key, iv, block_size)
-
-        # Attempt to decrypt using POODLE attack with the oracle
-        plaintext = poodle_attack(intercepted_message, iv, oracle, block_size)
-        st.write("Decrypted Message: ", plaintext.decode())
-    except Exception as e:
-        st.error(f"Error in decryption: {e}")
+        decrypted_message = poodle_attack(ciphertext, iv, oracle, block_size)
+        print("Decrypted Message:", decrypted_message.decode())
+    except ValueError as e:
+        print("Decryption failed:", e)

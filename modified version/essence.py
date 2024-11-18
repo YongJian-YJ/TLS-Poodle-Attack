@@ -75,6 +75,20 @@ ciphertext = cbc_encrypt(secret_message, key, iv, block_size)
 print("Ciphertext:", ciphertext.hex())
 
 
+def server_check_padding(modified_block, target_block, block_size):
+    """Simulate server-side padding check."""
+    decrypted_byte = xor_bytes(modified_block, target_block)
+    padding_value = decrypted_byte[-1]
+
+    # Validate padding
+    if padding_value == 0 or padding_value > block_size:
+        raise ValueError("Invalid padding")
+    if all(p == padding_value for p in decrypted_byte[-padding_value:]):
+        return True
+    else:
+        raise ValueError("Invalid padding")
+
+
 # Simulate POODLE Attack: Byte-by-byte decryption
 def poodle_attack(ciphertext, iv, block_size=8):
     """Perform a POODLE-like attack by decrypting the last byte of each block."""
@@ -83,7 +97,7 @@ def poodle_attack(ciphertext, iv, block_size=8):
         ciphertext[i : i + block_size] for i in range(0, len(ciphertext), block_size)
     ]
 
-    # Start from first ciphertext block #it doesnt start from 0 because block 0 is IV
+    # Start from last ciphertext block
     for block_index in range(1, len(blocks)):
         decrypted_block = bytearray(block_size)
         target_block = blocks[block_index]
@@ -91,14 +105,14 @@ def poodle_attack(ciphertext, iv, block_size=8):
 
         # Decrypt byte-by-byte
         for byte_index in range(block_size - 1, -1, -1):  # From last byte to first byte
-            padding_value = (
-                block_size - byte_index
-            )  #  if the block size is 16 and the plaintext length is 13, (16 - 13 = 3)
+            #  if the block size is 16 and the plaintext length is 13, (16 - 13 = 3)
+            padding_value = block_size - byte_index
             found = False  # Flag to mark when correct byte is found
             for guess in range(256):  # 256 because 2^8 is 256 possibilities
                 # creates a copy of the previous_block list.
+                # brute force the modified_block, byte-by-byte
                 modified_block = previous_block[:]
-                modified_block[byte_index] = guess  # Modify this byte
+                modified_block[byte_index] = guess
 
                 # Apply padding values to other bytes
                 for i in range(byte_index + 1, block_size):
@@ -110,6 +124,7 @@ def poodle_attack(ciphertext, iv, block_size=8):
                     # Attempt decryption with the modified block
                     # Modified block is the previous block, attacker manipulate this using trial and error
                     # Target block is the current ciphertext block that the attacker is trying to decrypt
+                    # Padding validation processes depend on the entire P, not just one byte.
                     decrypted_byte = xor_bytes(modified_block, target_block)
 
                     # if padding value = 3 and the [padding value] = [3], so the product become [3, 3, 3] and byte(xx) become b'\x03\x03\x03'
