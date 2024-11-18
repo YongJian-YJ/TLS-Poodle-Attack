@@ -52,9 +52,9 @@ message_placeholder = st.empty()
 if st.button("Refresh"):
     if "ciphertext" in st.session_state and "iv" in st.session_state:
         # Decode the ciphertext and IV from base64
-        ciphertext = base64.b64decode(st.session_state["ciphertext"])
-        iv = base64.b64decode(st.session_state["iv"])
-        key = base64.b64decode(st.session_state["key"])
+        ciphertext = st.session_state["ciphertext"]
+        iv = st.session_state["iv"]
+        key = st.session_state["key"]
 
         try:
             # Perform CBC decryption
