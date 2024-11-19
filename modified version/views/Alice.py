@@ -47,7 +47,7 @@ def cbc_encrypt(plaintext, key, iv, block_size=8):
 
 # Create a textbox for Alice to type the message
 username_input = st.text_input("Username:")
-password_input = st.text_input("Password:")
+password_input = st.text_input("Password:", type="password")
 
 
 # Create a button to send the message
