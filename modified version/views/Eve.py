@@ -12,15 +12,10 @@ def xor_bytes(a, b):
 def unpad(padded_text):
     """Remove PKCS#7 padding."""
     padding_len = padded_text[-1]
-    print(
-        f"Padding length: {padding_len}, Padded message: {padded_text}"
-    )  # Debugging line
 
     if padding_len == 0 or padding_len > len(padded_text):
-        print("Invalid Padding 3")
         raise ValueError("Invalid padding3")
     if padded_text[-padding_len:] != bytes([padding_len] * padding_len):
-        print("Invalid Padding 4")
         raise ValueError("Invalid padding4")
     return padded_text[:-padding_len]
 
@@ -38,25 +33,32 @@ def server_check_padding(modified_block, target_block, block_size, padding_value
 
 
 def poodle_attack(ciphertext, iv, block_size=8):
-    """Perform a POODLE-like attack by decrypting the last byte of each block."""
-    decrypted_message = b""
+    decrypted_message = bytearray()
+
+    # Split into blocks, including IV
     blocks = [iv] + [
         ciphertext[i : i + block_size] for i in range(0, len(ciphertext), block_size)
     ]
 
+    # Start from the last block and work backwards
+    # Range from (len(blocks)-1) down to 1 (excluding 0 since we don't decrypt IV)
     for block_index in range(len(blocks) - 1, 0, -1):
-        print("blocks index:", blocks[block_index].hex())
+
         decrypted_block = bytearray(block_size)
         target_block = blocks[block_index]
         previous_block = bytearray(blocks[block_index - 1])
 
+        # Process each byte in the block from right to left
         for byte_index in range(block_size - 1, -1, -1):
             padding_value = block_size - byte_index
             found = False
+
+            # Try all possible byte values
             for guess in range(256):
                 modified_block = previous_block[:]
                 modified_block[byte_index] = guess
-                # to get corresponding value for byte that have been calculated
+
+                # Update bytes that we've already found to maintain valid padding
                 for i in range(byte_index + 1, block_size):
                     modified_block[i] = (
                         previous_block[i] ^ padding_value ^ decrypted_block[i]
@@ -67,8 +69,8 @@ def poodle_attack(ciphertext, iv, block_size=8):
                         modified_block, target_block, block_size, padding_value
                     )
 
-                    if server_check == True:
-                        # Calculate the original byte value in the plaintext
+                    if server_check:
+                        # Calculate original plaintext byte
                         decrypted_block[byte_index] = (
                             guess ^ padding_value ^ previous_block[byte_index]
                         )
@@ -82,14 +84,19 @@ def poodle_attack(ciphertext, iv, block_size=8):
                         )
                         found = True
                         break
+
                 except ValueError:
                     continue
 
             if not found:
-                raise ValueError("Unable to determine padding")
+                raise ValueError(
+                    f"Failed to decrypt byte {byte_index} in block {block_index}"
+                )
 
-        decrypted_message += bytes(decrypted_block)
-    print("Decrypted Message: "decrypted_message)
+        # Insert the decrypted block at the beginning of our message
+        # This maintains correct order since we're decrypting from end to start
+        decrypted_message[0:0] = decrypted_block
+
     return unpad(decrypted_message)
 
 
