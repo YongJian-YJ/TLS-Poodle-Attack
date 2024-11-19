@@ -4,7 +4,13 @@ import base64
 
 block_size = 8
 
-st.header("Alice's Control Page")
+# Initialize session state variables
+if "ciphertext_username" not in st.session_state:
+    st.session_state["ciphertext_username"] = ""
+if "ciphertext_password" not in st.session_state:
+    st.session_state["ciphertext_password"] = ""
+
+st.header("Registration Page")
 
 # Initialize session state variables
 if "message" not in st.session_state:
@@ -40,28 +46,42 @@ def cbc_encrypt(plaintext, key, iv, block_size=8):
 
 
 # Create a textbox for Alice to type the message
-message_input = st.text_input("Enter your message:", value=st.session_state["message"])
+username_input = st.text_input("Username:")
+password_input = st.text_input("Password:")
+
 
 # Create a button to send the message
-if st.button("Send Message"):
-    secret_message = message_input.encode("utf-8")
+if st.button("Register"):
+    secret_username = username_input.encode("utf-8")
+    secret_password = password_input.encode("utf-8")
 
-    # Generate IV for this message
-    iv = os.urandom(block_size)
-    key = st.session_state["key"]  # Use consistent key from session state
+    # Generate keys for username
+    iv_username = os.urandom(block_size)
+    key_username = os.urandom(block_size)
+
+    # Generate keys for password
+    iv_password = os.urandom(block_size)
+    key_password = os.urandom(block_size)
 
     # Store IV and key in session state
-    st.session_state["iv"] = iv
+    st.session_state["iv_username"] = iv_username
+    st.session_state["iv_password"] = iv_password
+    st.session_state["key_username"] = key_username
+    st.session_state["key_password"] = key_password
 
     # Perform CBC encryption
-    ciphertext = cbc_encrypt(secret_message, key, iv)
+    ciphertext_username = cbc_encrypt(secret_username, key_username, iv_username)
+    ciphertext_password = cbc_encrypt(secret_password, key_password, iv_password)
 
     # Store ciphertext in session state
-    st.session_state["ciphertext"] = ciphertext
+    st.session_state["ciphertext_username"] = ciphertext_username
+    st.session_state["ciphertext_password"] = ciphertext_password
 
     # Display information
-    st.write(f"Original Message: {message_input}")
-    st.write(f"IV (hex): {iv.hex()}")
-    st.write(f"Ciphertext (hex): {ciphertext.hex()}")
-
-    st.success("Message encrypted and sent!")
+    st.success("Account registered successfully!")
+    st.markdown(
+        f"""
+    Your username is: `{ciphertext_username.hex()}`  
+    Your password is: `{ciphertext_password.hex()}`
+    """
+    )
