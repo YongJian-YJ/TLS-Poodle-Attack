@@ -69,19 +69,20 @@ def poodle_attack(ciphertext, iv, block_size=8):
 
                 try:
                     server_check = server_check_padding(
-                        modified_block, target_block, block_size, padding_value
+                        modified_block, 
+                        target_block, 
+                        block_size, 
+                        padding_value
                     )
 
-                    if server_check:
+                    if server_check == True:
                         # D8 xor C8 = 0x01
                         # D8 = C8 ^ 0x01
-                        decrypted_block[byte_index] = guess ^ padding_value
+                        decrypted_block[byte_index] = modified_block[byte_index] ^ padding_value
 
                         # P8 ^ original C8 = D8
                         # P8 = D8 ^ original C8
-                        plaintext_block[byte_index] = (
-                            decrypted_block[byte_index] ^ previous_block[byte_index]
-                        )
+                        plaintext_block[byte_index] = decrypted_block[byte_index] ^ previous_block[byte_index]
 
                         st.write(
                             "Block No: ",
