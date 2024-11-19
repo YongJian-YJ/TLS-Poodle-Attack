@@ -11,7 +11,7 @@ Server = st.Page(
 
 Alice = st.Page(
     page="views/Alice.py",
-    title="Alice's Control Page",
+    title="Registration Page",
     icon=":material/account_circle:",
     default=True,  # default means the first page
 )

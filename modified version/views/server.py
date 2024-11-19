@@ -49,20 +49,45 @@ st.title("Server Page")
 message_placeholder = st.empty()
 
 # Create a "Refresh" button
-if st.button("Refresh"):
-    if "ciphertext" in st.session_state and "iv" in st.session_state:
-        # Decode the ciphertext and IV from base64
-        ciphertext = st.session_state["ciphertext"]
-        iv = st.session_state["iv"]
-        key = st.session_state["key"]
+if st.button("Registration Logs"):
+    if (
+        "ciphertext_username" in st.session_state
+        and "iv_username" in st.session_state
+        and "ciphertext_password" in st.session_state
+        and "iv_password" in st.session_state
+    ):
+        # Decode the username field
+        ciphertext_username = st.session_state["ciphertext_username"]
+        iv_username = st.session_state["iv_username"]
+        key_username = st.session_state["key_username"]
 
         try:
             # Perform CBC decryption
-            decrypted_message = cbc_decrypt(ciphertext, key, iv, block_size)
-            message_placeholder.write(
-                f"Decrypted Message: {decrypted_message.decode('utf-8')}"
+            decrypted_username = cbc_decrypt(
+                ciphertext_username, key_username, iv_username, block_size
             )
         except Exception as e:
             message_placeholder.write(f"Error in decryption: {e}")
+
+        # Decode the password field
+        ciphertext_password = st.session_state["ciphertext_password"]
+        iv_password = st.session_state["iv_password"]
+        key_password = st.session_state["key_password"]
+
+        try:
+            # Perform CBC decryption
+            decrypted_password = cbc_decrypt(
+                ciphertext_password, key_password, iv_password, block_size
+            )
+
+        except Exception as e:
+            message_placeholder.write(f"Error in decryption: {e}")
+
+        st.markdown(
+            f"""
+            Username: `{decrypted_username.decode('utf-8')}`  
+            Password: `{decrypted_password.decode('utf-8')}`
+            """
+        )
     else:
         message_placeholder.write("No message received yet.")
