@@ -36,62 +36,53 @@ def poodle_attack(ciphertext, iv, block_size=8):
     decrypted_message = bytearray()
 
     # Split into blocks, including IV
-    blocks = [iv] + [ciphertext[i : i + block_size] for i in range(0, len(ciphertext), block_size)]
+    blocks = [iv] + [
+        ciphertext[i : i + block_size] for i in range(0, len(ciphertext), block_size)
+    ]
 
     # Start from the last block and work backwards
     # Range from (len(blocks)-1) down to 1 (excluding 0 since we don't decrypt IV)
     for block_index in range(len(blocks) - 1, 0, -1):
 
         decrypted_block = bytearray(block_size)
-        print("decrypted block:", decrypted_block)
-        target_block = blocks[block_index] # ciphertext
-        print("target block:", target_block)
-        previous_block = bytearray(blocks[block_index - 1]) # iv of target_block
-        print("previous block:", previous_block) 
-        plaintext_block = bytearray(block_size) # original plaintext
-        print("plaintext block:", plaintext_block)
+        plaintext_block = bytearray(block_size)
+        target_block = blocks[block_index]
+        previous_block = bytearray(blocks[block_index - 1])
 
-        # Process each byte in the block from right to left (from 7 to 0)
+        # Process each byte in the block from right to left
         for byte_index in range(block_size - 1, -1, -1):
-            padding_value = block_size - byte_index # forced padding_value, not the actual padding value in original plaintext
+            padding_value = block_size - byte_index
             found = False
 
-            # Try all possible byte values in hex, 2^8 possibilities
+            # Try all possible byte values
             for guess in range(256):
                 modified_block = previous_block[:]
                 modified_block[byte_index] = guess
 
-                # Update bytes that we've already found in IV and original plaintext to maintain valid padding, from byte_index = 7 to 0
-                for i in range(byte_index + 1, block_size): 
-                    # modified_block[i] = (
-                    #     previous_block[i] ^ padding_value ^ decrypted_block[i]
-                    # )
-                    modified_block[i] = (previous_block[i] ^ padding_value ^ plaintext_block[i]) # C7 xor 02 = decrypted_block
-                    # print("modified block[i]:", modified_block[i])
+                # Update bytes that we've already found to maintain valid padding
+                for i in range(byte_index + 1, block_size):
+                    # D8 = C8 xor padding
+                    decrypted_block[i] = previous_block[i] ^ padding_value
+
+                    # C8 = D8 xor P8
+                    modified_block[i] = decrypted_block[i] ^ plaintext_block[i]
 
                 try:
                     server_check = server_check_padding(
                         modified_block, target_block, block_size, padding_value
                     )
 
-                    if server_check: # if padding follows PKCS #7 standard
-                        # Calculate original plaintext byte
-                        print(f"previous block[{byte_index}]:", previous_block[byte_index])
-                        print(f"target block[{byte_index}]:", target_block[byte_index])
-                        # plaintext_block[byte_index] = (
-                        #     guess ^ padding_value ^ previous_block[byte_index]
-                        # )
-
+                    if server_check:
                         # D8 xor C8 = 0x01
                         # D8 = C8 ^ 0x01
-                        decrypted_block[byte_index] = guess ^ padding_value 
-                        print(f"decrypted_block[{byte_index}]:", hex(decrypted_block[byte_index]))
+                        decrypted_block[byte_index] = guess ^ padding_value
 
                         # P8 ^ original C8 = D8
                         # P8 = D8 ^ original C8
-                        plaintext_block[byte_index] = (decrypted_block[byte_index] ^ previous_block[byte_index]) 
-                        print(f"plaintext block[{byte_index}]:", hex(plaintext_block[byte_index]))
-                        
+                        plaintext_block[byte_index] = (
+                            decrypted_block[byte_index] ^ previous_block[byte_index]
+                        )
+
                         st.write(
                             "Block No: ",
                             block_index,
@@ -113,9 +104,8 @@ def poodle_attack(ciphertext, iv, block_size=8):
 
         # Insert the decrypted block at the beginning of our message
         # This maintains correct order since we're decrypting from end to start
-        decrypted_message = plaintext_block
-        print("decrypted message:", decrypted_message)
-    print("unpadded msg:", unpad(decrypted_message))
+        decrypted_message[0:0] = plaintext_block
+
     return unpad(decrypted_message)
 
 
