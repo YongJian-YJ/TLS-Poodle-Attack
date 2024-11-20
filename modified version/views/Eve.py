@@ -23,10 +23,12 @@ def unpad(padded_text):
 
 
 def server_check_padding(modified_block, target_block, block_size, padding_value):
-    """Simulate server-side padding check."""
-    decrypted_byte = xor_bytes(modified_block, target_block)
+    # modified_block = C8's block
+    # target_block = D8's block
+    # plaintext_block = P8's block
+    plaintext_block = xor_bytes(modified_block, target_block)
 
-    last_bytes = decrypted_byte[-padding_value:]
+    last_bytes = plaintext_block[-padding_value:]
 
     if last_bytes == [padding_value] * padding_value:
         return True
