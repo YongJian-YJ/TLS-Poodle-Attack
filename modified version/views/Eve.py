@@ -1,6 +1,8 @@
 import streamlit as st
 import os
 
+block_size = 8
+
 st.title("Eve's Control Page")
 
 
@@ -32,7 +34,7 @@ def server_check_padding(modified_block, target_block, block_size, padding_value
         raise ValueError("Invalid padding2")
 
 
-def poodle_attack(ciphertext, iv, block_size=8):
+def poodle_attack(ciphertext, iv, block_size):
     decrypted_message = bytearray()
 
     # Split into blocks, including IV
@@ -120,7 +122,6 @@ if st.button("Intercept Message"):
         and "ciphertext_password" in st.session_state
         and "iv_password" in st.session_state
     ):
-        block_size = 8
         # for username
         intercepted_ciphertext_username = st.session_state["ciphertext_username"]
         iv_username = st.session_state["iv_username"]
@@ -147,8 +148,6 @@ if st.button("Launch Poodle Attack"):
         and "ciphertext_password" in st.session_state
         and "iv_password" in st.session_state
     ):
-
-        block_size = 8
 
         # Poodle for username
         intercepted_ciphertext_username = st.session_state["ciphertext_username"]

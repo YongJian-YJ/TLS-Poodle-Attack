@@ -24,7 +24,7 @@ def unpad(padded_text):
 
 
 # CBC decryption function
-def cbc_decrypt(ciphertext, key, iv, block_size=8):
+def cbc_decrypt(ciphertext, key, iv, block_size):
     """Decrypt using CBC mode."""
     blocks = [iv]  # Initialize blocks with IV
     decrypted_message = b""
@@ -62,9 +62,12 @@ if st.button("Registration Logs"):
         key_username = st.session_state["key_username"]
 
         try:
-            # Perform CBC decryption
+            # Perform CBC decryption on ciphered username input
             decrypted_username = cbc_decrypt(
-                ciphertext_username, key_username, iv_username, block_size
+                ciphertext_username, 
+                key_username, 
+                iv_username, 
+                block_size
             )
         except Exception as e:
             message_placeholder.write(f"Error in decryption: {e}")
@@ -75,9 +78,12 @@ if st.button("Registration Logs"):
         key_password = st.session_state["key_password"]
 
         try:
-            # Perform CBC decryption
+            # Perform CBC decryption on ciphered password input
             decrypted_password = cbc_decrypt(
-                ciphertext_password, key_password, iv_password, block_size
+                ciphertext_password, 
+                key_password, 
+                iv_password, 
+                block_size
             )
 
         except Exception as e:
