@@ -26,9 +26,9 @@ def server_check_padding(modified_block, target_block, block_size, padding_value
     """Simulate server-side padding check."""
     decrypted_byte = xor_bytes(modified_block, target_block)
 
-    if padding_value == 0 or padding_value > block_size:
-        raise ValueError("Invalid padding1")
-    if all(p == padding_value for p in decrypted_byte[-padding_value:]):
+    last_bytes = decrypted_byte[-padding_value:]
+
+    if last_bytes == [padding_value] * padding_value:
         return True
     else:
         raise ValueError("Invalid padding2")
@@ -71,20 +71,21 @@ def poodle_attack(ciphertext, iv, block_size):
 
                 try:
                     server_check = server_check_padding(
-                        modified_block, 
-                        target_block, 
-                        block_size, 
-                        padding_value
+                        modified_block, target_block, block_size, padding_value
                     )
 
                     if server_check == True:
                         # D8 xor C8 = 0x01
                         # D8 = C8 ^ 0x01
-                        decrypted_block[byte_index] = modified_block[byte_index] ^ padding_value
+                        decrypted_block[byte_index] = (
+                            modified_block[byte_index] ^ padding_value
+                        )
 
                         # P8 ^ original C8 = D8
                         # P8 = D8 ^ original C8
-                        plaintext_block[byte_index] = decrypted_block[byte_index] ^ previous_block[byte_index]
+                        plaintext_block[byte_index] = (
+                            decrypted_block[byte_index] ^ previous_block[byte_index]
+                        )
 
                         st.write(
                             "Block No: ",
