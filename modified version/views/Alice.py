@@ -68,7 +68,7 @@ if st.button("Register"):
     key_username = os.urandom(key_size)
     print("key username:", key_username)
     print(type(key_username))
-    key_username_int = int.from_bytes(key_username, byteorder='big')
+    key_username_int = int.from_bytes(key_username, byteorder="big")
     print(key_username_int)
     print(key_username_int.bit_length(), "bits")
 
@@ -85,8 +85,12 @@ if st.button("Register"):
     st.session_state["key_password"] = key_password
 
     # Perform CBC encryption
-    ciphertext_username = cbc_encrypt(secret_username, key_username, iv_username, block_size)
-    ciphertext_password = cbc_encrypt(secret_password, key_password, iv_password, block_size)
+    ciphertext_username = cbc_encrypt(
+        secret_username, key_username, iv_username, block_size
+    )
+    ciphertext_password = cbc_encrypt(
+        secret_password, key_password, iv_password, block_size
+    )
 
     # Store ciphertext in session state
     st.session_state["ciphertext_username"] = ciphertext_username
@@ -96,7 +100,9 @@ if st.button("Register"):
     st.success("Account registered successfully!")
     st.markdown(
         f"""
-    Your username is: `{ciphertext_username.hex()}`  
+    Please confirm that your password is: `{secret_password.decode('utf-8')}`
+
+    \nYour username is: `{ciphertext_username.hex()}`  
     Your password is: `{ciphertext_password.hex()}`
     """
     )
