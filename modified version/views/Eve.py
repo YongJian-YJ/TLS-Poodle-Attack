@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 
-block_size = 8
+block_size = 16
 
 st.title("Eve's Control Page")
 

@@ -2,7 +2,7 @@ import streamlit as st
 import base64
 import os
 
-block_size = 8
+block_size = 16
 
 
 # Function to simulate XOR operation between two byte-like objects

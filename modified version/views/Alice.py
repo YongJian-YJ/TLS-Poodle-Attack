@@ -2,8 +2,8 @@ import streamlit as st
 import os
 import base64
 
-block_size = 8
-key_size = 7
+block_size = 16
+key_size = 32
 
 # Initialize session state variables
 if "ciphertext_username" not in st.session_state:
@@ -67,16 +67,16 @@ if st.button("Register"):
     iv_username = os.urandom(block_size)
     key_username = os.urandom(key_size)
     print("key username:", key_username)
-    print(type(key_username))
+    # print(type(key_username))
     key_username_int = int.from_bytes(key_username, byteorder="big")
-    print(key_username_int)
-    print(key_username_int.bit_length(), "bits")
+    # print(key_username_int)
+    # print(key_username_int.bit_length(), "bits")
 
     # Generate keys for password
     iv_password = os.urandom(block_size)
     key_password = os.urandom(key_size)
     print("key password:", key_password)
-    print(type(key_password))
+    # print(type(key_password))
 
     # Store IV and key in session state
     st.session_state["iv_username"] = iv_username
