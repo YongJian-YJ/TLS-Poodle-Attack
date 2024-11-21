@@ -46,9 +46,10 @@ def cbc_encrypt(plaintext, key, iv, block_size):
     # Appends the hash code (HMAC) to the raw plaintext data
     print("HMAC:", hash_value)
     print(len(hash_value))
-    plaintext = plaintext + hash_value
-    print("plaintext:", plaintext)
-    padded_plaintext = pad(plaintext, block_size)
+    combined_plaintext = plaintext + hash_value
+    print("plaintext:", combined_plaintext)
+    padded_plaintext = pad(combined_plaintext, block_size)
+    print("padded_plaintext:", padded_plaintext)
     previous = iv
     ciphertext = b""
 
@@ -78,13 +79,15 @@ if st.button("Register"):
     print("key username:", key_username)
     # print(type(key_username))
     key_username_int = int.from_bytes(key_username, byteorder="big")
-    # print(key_username_int)
+    print(key_username_int)
     # print(key_username_int.bit_length(), "bits")
 
     # Generate keys for password
     iv_password = os.urandom(block_size)
     key_password = os.urandom(key_size)
     print("key password:", key_password)
+    key_password_int = int.from_bytes(key_password, byteorder="big")
+    print(key_password_int)
     # print(type(key_password))
 
     # Store IV and key in session state

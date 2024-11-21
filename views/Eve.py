@@ -81,10 +81,10 @@ def poodle_attack(ciphertext, iv, block_size, key):
 
                 # Update bytes that we've already found to maintain valid padding
                 for i in range(byte_index + 1, block_size):
-                    # D8 = C8 xor padding
+                    # E.g. D8 = C8 xor P8
                     decrypted_block[i] = previous_block[i] ^ padding_value
 
-                    # C8 = D8 xor P8
+                    # E.g. C8 = D8 xor P8
                     modified_block[i] = decrypted_block[i] ^ plaintext_block[i]
 
                 try:
@@ -93,12 +93,14 @@ def poodle_attack(ciphertext, iv, block_size, key):
                     )
 
                     if server_check == True:
+                        # Example:
                         # D8 xor C8 = 0x01
                         # D8 = C8 ^ 0x01
                         decrypted_block[byte_index] = (
                             modified_block[byte_index] ^ padding_value
                         )
-
+                        
+                        # Example:
                         # P8 ^ original C8 = D8
                         # P8 = D8 ^ original C8
                         plaintext_block[byte_index] = (

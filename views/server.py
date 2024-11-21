@@ -117,6 +117,7 @@ if st.button("Registration Logs"):
     ):
         # Decode the username field
         ciphertext_username = st.session_state["ciphertext_username"]
+        print("ciphertext username:", ciphertext_username)
         iv_username = st.session_state["iv_username"]
         key_username = st.session_state["key_username"]
 
@@ -133,6 +134,7 @@ if st.button("Registration Logs"):
 
         # Decode the password field
         ciphertext_password = st.session_state["ciphertext_password"]
+        print("ciphertext password:", ciphertext_password)
         iv_password = st.session_state["iv_password"]
         key_password = st.session_state["key_password"]
 
