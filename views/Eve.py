@@ -1,8 +1,9 @@
 import streamlit as st
 import hmac, hashlib
+from Crypto.Cipher import AES
 
 # Follow ciphertext block size as per client Alice, according to Advanced Encryption Standard (AES).
-block_size = 16
+block_size = AES.block_size
 
 # Function to simulate decryption via XOR operation between two byte-like objects (for demo purposes only)
 def xor_bytes(a, b):
@@ -10,9 +11,10 @@ def xor_bytes(a, b):
     return bytes(x ^ y for x, y in zip(a, b))
 
 # Function to unpad the decrypted message (reverse of padding)
-def unpad(padded_text, key, hmac_len=32):
+def unpad(padded_text, key):
     """Remove PKCS#7 padding."""
     padding_len = padded_text[-1]
+    hmac_len = 32
 
     # Check for invalid padding first before unpadding
     if padding_len == 0 or padding_len > len(padded_text):
@@ -37,7 +39,7 @@ def unpad(padded_text, key, hmac_len=32):
 
 
 # Oracle check function to validate padding in plaintext_block for poodle attack
-def server_check_padding(modified_block, target_block, block_size, padding_value):
+def server_check_padding(modified_block, target_block, padding_value):
     # modified_block = C8's block
     # target_block = D8's block
     # plaintext_block = P8's block
@@ -98,23 +100,21 @@ def poodle_attack(ciphertext, iv, block_size, key):
                 try:
                     # Oracle check function
                     server_check = server_check_padding(
-                        modified_block, target_block, block_size, padding_value
+                        modified_block, 
+                        target_block, 
+                        padding_value
                     )
 
                     if server_check == True:
                         # Example:
                         # D8 xor C8 = 0x01
                         # D8 = C8 xor 0x01
-                        decrypted_block[byte_index] = (
-                            modified_block[byte_index] ^ padding_value
-                        )
+                        decrypted_block[byte_index] = (modified_block[byte_index] ^ padding_value)
                         
                         # Example:
                         # P8 xor original C8 = D8
                         # P8 = D8 xor original C8
-                        plaintext_block[byte_index] = (
-                            decrypted_block[byte_index] ^ previous_block[byte_index]
-                        )
+                        plaintext_block[byte_index] = (decrypted_block[byte_index] ^ previous_block[byte_index])
 
                         st.write(
                             "Block No: ",

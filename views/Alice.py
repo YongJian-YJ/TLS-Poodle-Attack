@@ -1,10 +1,11 @@
 import streamlit as st
-import os
 import hmac, hashlib
+from Crypto.Cipher import AES
+from Crypto import Random
 
 # Define ciphertext block size and key size for encryption / decryption, according to Advanced Encryption Standard (AES).
-block_size = 16
-key_size = 32
+block_size = AES.block_size
+key_size = AES.key_size[2]
 
 # Initialize session state variables
 if ("ciphertext_username" and "key_username" and "iv_username") not in st.session_state:
@@ -72,15 +73,15 @@ if st.button("Register"):
     secret_password = password_input.encode("utf-8")
 
     # Generate keys for username
-    iv_username = os.urandom(block_size)
-    key_username = os.urandom(key_size)
+    iv_username = Random.new().read(block_size)
+    key_username = Random.new().read(key_size)
     print("username key:", key_username)
     key_username_int = int.from_bytes(key_username, byteorder="big")
     print(key_username_int.bit_length(), "bits")
 
     # Generate keys for password
-    iv_password = os.urandom(block_size)
-    key_password = os.urandom(key_size)
+    iv_password = Random.new().read(block_size)
+    key_password = Random.new().read(key_size)
     print("password key:", key_password)
     key_password_int = int.from_bytes(key_password, byteorder="big")
     print(key_password_int.bit_length(), "bits")

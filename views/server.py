@@ -1,8 +1,9 @@
 import streamlit as st
 import hmac, hashlib
+from Crypto.Cipher import AES
 
 # Follow ciphertext block size as per client Alice, according to Advanced Encryption Standard (AES).
-block_size = 16
+block_size = AES.block_size
 
 # Function to simulate decryption via XOR operation between two byte-like objects (for demo purposes only)
 def xor_bytes(a, b):
@@ -10,9 +11,10 @@ def xor_bytes(a, b):
     return bytes(x ^ y for x, y in zip(a, b))
 
 # Function to unpad the decrypted message (reverse of padding)
-def unpad(padded_text, key, hmac_len=32):
+def unpad(padded_text, key):
     """Remove PKCS#7 padding."""
     padding_len = padded_text[-1]
+    hmac_len = 32
 
     # Check for invalid padding first before unpadding
     if padding_len == 0 or padding_len > len(padded_text):
