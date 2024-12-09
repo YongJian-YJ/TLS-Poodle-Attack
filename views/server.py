@@ -56,9 +56,10 @@ st.title("Account Server Page")
 
 # Create a "Refresh" button for server to receive user input
 if st.button("Registration Logs"):
+    # Check if session states contain the user input sent from Alice before performing decryption
     if (
-        "ciphertext_username" and "iv_username" and 
-        "ciphertext_password" and "iv_password"
+        "ciphertext_username" and "iv_username" and "key_username" and
+        "ciphertext_password" and "iv_password" and "key_password"
     ) in st.session_state:
         # Extract the username field from session states
         ciphertext_username = st.session_state["ciphertext_username"]

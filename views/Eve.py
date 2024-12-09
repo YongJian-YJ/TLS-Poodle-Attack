@@ -148,9 +148,10 @@ st.title("Eve's Control Page")
 st.header("Intercepted Message")
 
 if st.button("Intercept Message"):
+    # Check if session states sent from Alice to the server contain the user input sent from Alice
     if (
-        "ciphertext_username" and "iv_username" and 
-        "ciphertext_password" and "iv_password"
+        "ciphertext_username" and "iv_username" and "key_username" and
+        "ciphertext_password" and "iv_password" and "key_password"
     ) in st.session_state:
         # Extract the username field from session states
         intercepted_ciphertext_username = st.session_state["ciphertext_username"]
@@ -174,9 +175,10 @@ if st.button("Intercept Message"):
         st.error("Incomplete information required for poodle attack")
 
 if st.button("Launch Poodle Attack"):
+    # Check if session states sent from Alice to the server contain the user input before performing POODLE attack
     if (
-        "ciphertext_username" and "iv_username" and
-        "ciphertext_password" and "iv_password"
+        "ciphertext_username" and "iv_username" and "key_username" and
+        "ciphertext_password" and "iv_password" and "key_password"
     ) in st.session_state:
         # POODLE attack on username field
         intercepted_ciphertext_username = st.session_state["ciphertext_username"]
