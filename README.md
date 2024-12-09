@@ -31,6 +31,7 @@
   *Note: For the newest Python 3.12 version, pip is not supported. Use **pip3** or **pip3.12** instead.
   - Built-in Python modules: **`hmac.py`** and **`hashlib.py`**
   </p>
+  
   Fork this repo for your own convenience. :-)
 </div>
 
@@ -99,5 +100,25 @@
 └── POODLE PoC Presentation_Final.pptx              # Final presentation slide deck
 ```
 
-## Presentation Slides  
-You may view our presentation slide deck <a href="/POODLE PoC Presentation_Final.pptx">here</a>.
+## Presentation Slides
+<div align="justify">
+  You may view our presentation slide deck <a href="/POODLE PoC Presentation_Final.pptx">here</a>, for a better theoretical understanding of the POODLE attack.
+</div>
+
+## References
+<div align="justify">
+  <p>
+    
+  - https://github.com/mpgn/poodle-PoC/tree/master
+  - https://access.redhat.com/articles/1232123
+  - https://www.acunetix.com/blog/web-security-zone/what-is-poodle-attack/
+  - https://en.wikipedia.org/wiki/POODLE
+  - https://www.techtarget.com/whatis/definition/POODLE-attack
+  - https://www.wallarm.com/what/poodle-attack
+  - https://www.manageengine.com/key-manager/information-center/what-is-poodle-attack.html
+  - https://paddingoracle.github.io/
+  - https://www.youtube.com/watch?v=uDHo-UAM6_4 (Padding Oracle Attack Visualization)
+  - https://www.youtube.com/watch?v=F0srzSkTO5M&t=290s (POODLE attack - Padding Oracle On Downgraded Legacy Encryption (TLS Academy))
+  - https://www.youtube.com/watch?v=4EgD4PEatA8&t=483s (CS2107 Padding Oracle Attack)
+  </p>
+</div>
