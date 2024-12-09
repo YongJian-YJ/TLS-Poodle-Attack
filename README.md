@@ -111,8 +111,11 @@
     
   - https://github.com/mpgn/poodle-PoC/tree/master
   - https://access.redhat.com/articles/1232123
+  - https://www.geeksforgeeks.org/block-cipher-modes-of-operation/
+  - https://xilinx.github.io/Vitis_Libraries/security/2020.1/guide_L1/internals/cbc.html
   - https://www.acunetix.com/blog/web-security-zone/what-is-poodle-attack/
   - https://en.wikipedia.org/wiki/POODLE
+  - https://en.wikipedia.org/wiki/Transport_Layer_Security
   - https://www.techtarget.com/whatis/definition/POODLE-attack
   - https://www.wallarm.com/what/poodle-attack
   - https://www.manageengine.com/key-manager/information-center/what-is-poodle-attack.html
@@ -120,5 +123,6 @@
   - https://www.youtube.com/watch?v=uDHo-UAM6_4 (Padding Oracle Attack Visualization)
   - https://www.youtube.com/watch?v=F0srzSkTO5M&t=290s (POODLE attack - Padding Oracle On Downgraded Legacy Encryption (TLS Academy))
   - https://www.youtube.com/watch?v=4EgD4PEatA8&t=483s (CS2107 Padding Oracle Attack)
+  - https://www.youtube.com/watch?v=0D7OwYp6ZEc (Cipher Block Chaining Mode - Applied Cryptography)
   </p>
 </div>
