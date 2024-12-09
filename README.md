@@ -1,4 +1,4 @@
-# SC4010 SSL 3.0 POODLE Attack
+# POODLE Attack PoC (SSL 3.0 Protocol)
 
 <p>U/C</p>
 
