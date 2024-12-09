@@ -54,7 +54,7 @@ def cbc_decrypt(ciphertext, key, iv, block_size):
     return unpad(decrypted_message, key)
 
 
-st.title("Account Server Page")
+st.title("Server Page")
 
 # Create a "Refresh" button for server to receive user input
 if st.button("Registration Logs"):

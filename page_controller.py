@@ -13,7 +13,7 @@ Server = st.Page(
 # Client browser page
 Alice = st.Page(
     page="views/Alice.py",
-    title="Registration Page",
+    title="Account Registration Page",
     icon=":material/account_circle:",
     default=True,  # to set this as FIRST page upon establishing connection
 )
